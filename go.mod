@@ -1,7 +1,7 @@
 module github.com/ipfs/go-ipfs
 
 require (
-	bazil.org/fuse v0.0.0-20200117225306-7b5117fecadc
+	bazil.org/fuse v0.0.0-20200524192727-fb710f7dfd05
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bren2010/proquint v0.0.0-20160323162903-38337c27106d
@@ -63,7 +63,7 @@ require (
 	github.com/libp2p/go-libp2p v0.9.6
 	github.com/libp2p/go-libp2p-circuit v0.2.3
 	github.com/libp2p/go-libp2p-connmgr v0.2.4
-	github.com/libp2p/go-libp2p-core v0.5.7
+	github.com/libp2p/go-libp2p-core v0.6.0
 	github.com/libp2p/go-libp2p-discovery v0.4.0
 	github.com/libp2p/go-libp2p-http v0.1.5
 	github.com/libp2p/go-libp2p-kad-dht v0.8.2
@@ -97,6 +97,7 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.6.0
+	github.com/prometheus/procfs v0.1.3 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/whyrusleeping/base32 v0.0.0-20170828182744-c30ac30633cc
@@ -112,5 +113,21 @@ require (
 	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 )
+
+replace github.com/ipfs/go-ipfs-cmds => ../../ipfs/go-ipfs-cmds
+
+replace github.com/ipfs/go-fs-lock => ../../ipfs/go-fs-lock
+
+replace github.com/ipfs/go-ds-flatfs => ../../ipfs/go-ds-flatfs
+
+replace github.com/libp2p/go-reuseport => ../../libp2p/go-reuseport
+
+replace github.com/libp2p/go-reuseport-transport => ../../libp2p/go-reuseport-transport
+
+replace github.com/libp2p/go-netroute => ../../libp2p/go-netroute
+
+replace gopkg.in/cheggaaa/pb.v1 => ../../cheggaaa/pb
+
+replace github.com/libp2p/go-libp2p-swarm => ../../libp2p/go-libp2p-swarm
 
 go 1.13
