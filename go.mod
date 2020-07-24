@@ -82,6 +82,7 @@ require (
 	github.com/libp2p/go-libp2p-testing v0.1.1
 	github.com/libp2p/go-libp2p-tls v0.1.3
 	github.com/libp2p/go-libp2p-yamux v0.2.8
+	github.com/libp2p/go-reuseport-transport v0.0.4 // indirect
 	github.com/libp2p/go-socket-activation v0.0.2
 	github.com/libp2p/go-tcp-transport v0.2.0
 	github.com/libp2p/go-ws-transport v0.3.1
@@ -119,12 +120,6 @@ replace github.com/ipfs/go-ipfs-cmds => ../../ipfs/go-ipfs-cmds
 replace github.com/ipfs/go-fs-lock => ../../ipfs/go-fs-lock
 
 replace github.com/ipfs/go-ds-flatfs => ../../ipfs/go-ds-flatfs
-
-replace github.com/libp2p/go-reuseport => ../../libp2p/go-reuseport
-
-replace github.com/libp2p/go-reuseport-transport => ../../libp2p/go-reuseport-transport
-
-replace github.com/libp2p/go-netroute => ../../libp2p/go-netroute
 
 replace gopkg.in/cheggaaa/pb.v1 => ../../cheggaaa/pb
 
