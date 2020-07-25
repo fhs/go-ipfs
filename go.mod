@@ -63,7 +63,7 @@ require (
 	github.com/libp2p/go-libp2p v0.9.6
 	github.com/libp2p/go-libp2p-circuit v0.2.3
 	github.com/libp2p/go-libp2p-connmgr v0.2.4
-	github.com/libp2p/go-libp2p-core v0.6.0
+	github.com/libp2p/go-libp2p-core v0.5.7
 	github.com/libp2p/go-libp2p-discovery v0.4.0
 	github.com/libp2p/go-libp2p-http v0.1.5
 	github.com/libp2p/go-libp2p-kad-dht v0.8.2
@@ -122,7 +122,5 @@ replace github.com/ipfs/go-fs-lock => ../../ipfs/go-fs-lock
 replace github.com/ipfs/go-ds-flatfs => ../../ipfs/go-ds-flatfs
 
 replace gopkg.in/cheggaaa/pb.v1 => ../../cheggaaa/pb
-
-replace github.com/libp2p/go-libp2p-swarm => ../../libp2p/go-libp2p-swarm
 
 go 1.13
