@@ -23,7 +23,7 @@ require (
 	github.com/ipfs/go-datastore v0.4.4
 	github.com/ipfs/go-detect-race v0.0.1
 	github.com/ipfs/go-ds-badger v0.2.4
-	github.com/ipfs/go-ds-flatfs v0.4.4
+	github.com/ipfs/go-ds-flatfs v0.4.5-0.20200729195420-d5fa746ed1ed
 	github.com/ipfs/go-ds-leveldb v0.4.2
 	github.com/ipfs/go-ds-measure v0.1.0
 	github.com/ipfs/go-filestore v0.0.3
@@ -116,8 +116,6 @@ require (
 )
 
 replace github.com/ipfs/go-ipfs-cmds => ../../ipfs/go-ipfs-cmds
-
-replace github.com/ipfs/go-ds-flatfs => ../../ipfs/go-ds-flatfs
 
 replace gopkg.in/cheggaaa/pb.v1 => ../../cheggaaa/pb
 
