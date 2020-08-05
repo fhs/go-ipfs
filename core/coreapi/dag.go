@@ -2,10 +2,9 @@ package coreapi
 
 import (
 	"context"
-	"fmt"
 
 	cid "github.com/ipfs/go-cid"
-	pin "github.com/ipfs/go-ipfs-pinner"
+	"github.com/ipfs/go-ipfs-pinner"
 	ipld "github.com/ipfs/go-ipld-format"
 	dag "github.com/ipfs/go-merkledag"
 )
@@ -22,16 +21,12 @@ func (adder *pinningAdder) Add(ctx context.Context, nd ipld.Node) error {
 	defer adder.blockstore.PinLock().Unlock()
 
 	if err := adder.dag.Add(ctx, nd); err != nil {
-		return fmt.Errorf("pinningAdder.dag.Add: %v", err)
+		return err
 	}
 
 	adder.pinning.PinWithMode(nd.Cid(), pin.Recursive)
 
-	err := adder.pinning.Flush(ctx)
-	if err != nil {
-		err = fmt.Errorf("pinningAdder.pinning.Flush: %v", err)
-	}
-	return err
+	return adder.pinning.Flush(ctx)
 }
 
 func (adder *pinningAdder) AddMany(ctx context.Context, nds []ipld.Node) error {
