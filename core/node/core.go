@@ -10,11 +10,11 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-filestore"
-	blockstore "github.com/ipfs/go-ipfs-blockstore"
-	exchange "github.com/ipfs/go-ipfs-exchange-interface"
-	offline "github.com/ipfs/go-ipfs-exchange-offline"
-	pin "github.com/ipfs/go-ipfs-pinner"
-	format "github.com/ipfs/go-ipld-format"
+	"github.com/ipfs/go-ipfs-blockstore"
+	"github.com/ipfs/go-ipfs-exchange-interface"
+	"github.com/ipfs/go-ipfs-exchange-offline"
+	"github.com/ipfs/go-ipfs-pinner"
+	"github.com/ipfs/go-ipld-format"
 	"github.com/ipfs/go-merkledag"
 	"github.com/ipfs/go-mfs"
 	"github.com/ipfs/go-unixfs"
@@ -131,7 +131,6 @@ func Files(mctx helpers.MetricsCtx, lc fx.Lifecycle, repo repo.Repo, dag format.
 		nd = unixfs.EmptyDirNode()
 		err := dag.Add(ctx, nd)
 		if err != nil {
-			fmt.Printf("dag type = %T\n", dag)
 			return nil, fmt.Errorf("failure writing to dagstore: %s", err)
 		}
 	case err == nil:
