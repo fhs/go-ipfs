@@ -117,4 +117,8 @@ require (
 
 replace gopkg.in/cheggaaa/pb.v1 => ../../cheggaaa/pb
 
+replace github.com/ipfs/go-ds-badger => ../../ipfs/go-ds-badger
+
+replace github.com/dgraph-io/badger/v2 => ../../dgraph-io/badger
+
 go 1.13
