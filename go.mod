@@ -5,6 +5,7 @@ require (
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bren2010/proquint v0.0.0-20160323162903-38337c27106d
+	github.com/cheggaaa/pb v1.0.29
 	github.com/coreos/go-systemd/v22 v22.1.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elgris/jsondiff v0.0.0-20160530203242-765b5c24c302
@@ -113,10 +114,7 @@ require (
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2 // indirect
 	golang.org/x/sys v0.0.0-20200523222454-059865788121
 	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375 // indirect
-	gopkg.in/cheggaaa/pb.v1 v1.0.28
 )
-
-replace gopkg.in/cheggaaa/pb.v1 => ../../cheggaaa/pb
 
 replace github.com/ipfs/go-ds-badger => ../../ipfs/go-ds-badger
 
