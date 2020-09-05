@@ -11,13 +11,15 @@ import (
 	"text/tabwriter"
 
 	cmds "github.com/ipfs/go-ipfs-cmds"
+	config "github.com/ipfs/go-ipfs-config"
+	oldcmds "github.com/ipfs/go-ipfs/commands"
 	cmdenv "github.com/ipfs/go-ipfs/core/commands/cmdenv"
 	"github.com/ipfs/go-ipfs/core/commands/e"
+	ke "github.com/ipfs/go-ipfs/core/commands/keyencode"
 	fsrepo "github.com/ipfs/go-ipfs/repo/fsrepo"
 	options "github.com/ipfs/interface-go-ipfs-core/options"
 	"github.com/libp2p/go-libp2p-core/crypto"
 	peer "github.com/libp2p/go-libp2p-core/peer"
-	mbase "github.com/multiformats/go-multibase"
 )
 
 var KeyCmd = &cmds.Command{
@@ -44,6 +46,7 @@ publish'.
 		"list":   keyListCmd,
 		"rename": keyRenameCmd,
 		"rm":     keyRmCmd,
+		"rotate": keyRotateCmd,
 	},
 }
 
@@ -65,9 +68,10 @@ type KeyRenameOutput struct {
 }
 
 const (
-	keyStoreTypeOptionName = "type"
-	keyStoreSizeOptionName = "size"
-	keyFormatOptionName    = "format"
+	keyStoreAlgorithmDefault = options.Ed25519Key
+	keyStoreTypeOptionName   = "type"
+	keyStoreSizeOptionName   = "size"
+	oldKeyOptionName         = "oldkey"
 )
 
 var keyGenCmd = &cmds.Command{
@@ -75,9 +79,9 @@ var keyGenCmd = &cmds.Command{
 		Tagline: "Create a new keypair",
 	},
 	Options: []cmds.Option{
-		cmds.StringOption(keyStoreTypeOptionName, "t", "type of the key to create: rsa, ed25519").WithDefault("rsa"),
+		cmds.StringOption(keyStoreTypeOptionName, "t", "type of the key to create: rsa, ed25519").WithDefault(keyStoreAlgorithmDefault),
 		cmds.IntOption(keyStoreSizeOptionName, "s", "size of the key to generate"),
-		cmds.StringOption(keyFormatOptionName, "f", "output format: b58mh or b36cid").WithDefault("b58mh"),
+		cmds.StringOption(ke.IPNSKeyFormatOptionName, "", "Encoding used for keys: Can either be a multibase encoded CID or a base58btc encoded multihash. Takes {b58mh|base36|k|base32|b...}.").WithDefault("base36"),
 	},
 	Arguments: []cmds.Argument{
 		cmds.StringArg("name", true, false, "name of key to create"),
@@ -104,7 +108,8 @@ var keyGenCmd = &cmds.Command{
 		if sizefound {
 			opts = append(opts, options.Key.Size(size))
 		}
-		if err = verifyIDFormatLabel(req.Options[keyFormatOptionName].(string)); err != nil {
+		keyEnc, err := ke.KeyEncoderFromString(req.Options[ke.IPNSKeyFormatOptionName].(string))
+		if err != nil {
 			return err
 		}
 
@@ -116,7 +121,7 @@ var keyGenCmd = &cmds.Command{
 
 		return cmds.EmitOnce(res, &KeyOutput{
 			Name: name,
-			Id:   formatID(key.ID(), req.Options[keyFormatOptionName].(string)),
+			Id:   keyEnc.FormatID(key.ID()),
 		})
 	},
 	Encoders: cmds.EncoderMap{
@@ -218,7 +223,7 @@ var keyImportCmd = &cmds.Command{
 		Tagline: "Import a key and prints imported key id",
 	},
 	Options: []cmds.Option{
-		cmds.StringOption(keyFormatOptionName, "f", "output format: b58mh or b36cid").WithDefault("b58mh"),
+		cmds.StringOption(ke.IPNSKeyFormatOptionName, "", "Encoding used for keys: Can either be a multibase encoded CID or a base58btc encoded multihash. Takes {b58mh|base36|k|base32|b...}.").WithDefault("base36"),
 	},
 	Arguments: []cmds.Argument{
 		cmds.StringArg("name", true, false, "name to associate with key in keychain"),
@@ -229,6 +234,11 @@ var keyImportCmd = &cmds.Command{
 
 		if name == "self" {
 			return fmt.Errorf("cannot import key with name 'self'")
+		}
+
+		keyEnc, err := ke.KeyEncoderFromString(req.Options[ke.IPNSKeyFormatOptionName].(string))
+		if err != nil {
+			return err
 		}
 
 		file, err := cmdenv.GetFileArg(req.Files.Entries())
@@ -275,7 +285,7 @@ var keyImportCmd = &cmds.Command{
 
 		return cmds.EmitOnce(res, &KeyOutput{
 			Name: name,
-			Id:   formatID(pid, req.Options[keyFormatOptionName].(string)),
+			Id:   keyEnc.FormatID(pid),
 		})
 	},
 	Encoders: cmds.EncoderMap{
@@ -293,10 +303,11 @@ var keyListCmd = &cmds.Command{
 	},
 	Options: []cmds.Option{
 		cmds.BoolOption("l", "Show extra information about keys."),
-		cmds.StringOption(keyFormatOptionName, "f", "output format: b58mh or b36cid").WithDefault("b58mh"),
+		cmds.StringOption(ke.IPNSKeyFormatOptionName, "", "Encoding used for keys: Can either be a multibase encoded CID or a base58btc encoded multihash. Takes {b58mh|base36|k|base32|b...}.").WithDefault("base36"),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
-		if err := verifyIDFormatLabel(req.Options[keyFormatOptionName].(string)); err != nil {
+		keyEnc, err := ke.KeyEncoderFromString(req.Options[ke.IPNSKeyFormatOptionName].(string))
+		if err != nil {
 			return err
 		}
 
@@ -315,7 +326,7 @@ var keyListCmd = &cmds.Command{
 		for _, key := range keys {
 			list = append(list, KeyOutput{
 				Name: key.Name(),
-				Id:   formatID(key.ID(), req.Options[keyFormatOptionName].(string)),
+				Id:   keyEnc.FormatID(key.ID()),
 			})
 		}
 
@@ -341,9 +352,14 @@ var keyRenameCmd = &cmds.Command{
 	},
 	Options: []cmds.Option{
 		cmds.BoolOption(keyStoreForceOptionName, "f", "Allow to overwrite an existing key."),
+		cmds.StringOption(ke.IPNSKeyFormatOptionName, "", "Encoding used for keys: Can either be a multibase encoded CID or a base58btc encoded multihash. Takes {b58mh|base36|k|base32|b...}.").WithDefault("base36"),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
 		api, err := cmdenv.GetApi(env, req)
+		if err != nil {
+			return err
+		}
+		keyEnc, err := ke.KeyEncoderFromString(req.Options[ke.IPNSKeyFormatOptionName].(string))
 		if err != nil {
 			return err
 		}
@@ -360,7 +376,7 @@ var keyRenameCmd = &cmds.Command{
 		return cmds.EmitOnce(res, &KeyRenameOutput{
 			Was:       name,
 			Now:       newName,
-			Id:        key.ID().Pretty(),
+			Id:        keyEnc.FormatID(key.ID()),
 			Overwrite: overwritten,
 		})
 	},
@@ -386,9 +402,14 @@ var keyRmCmd = &cmds.Command{
 	},
 	Options: []cmds.Option{
 		cmds.BoolOption("l", "Show extra information about keys."),
+		cmds.StringOption(ke.IPNSKeyFormatOptionName, "", "Encoding used for keys: Can either be a multibase encoded CID or a base58btc encoded multihash. Takes {b58mh|base36|k|base32|b...}.").WithDefault("base36"),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
 		api, err := cmdenv.GetApi(env, req)
+		if err != nil {
+			return err
+		}
+		keyEnc, err := ke.KeyEncoderFromString(req.Options[ke.IPNSKeyFormatOptionName].(string))
 		if err != nil {
 			return err
 		}
@@ -402,7 +423,10 @@ var keyRmCmd = &cmds.Command{
 				return err
 			}
 
-			list = append(list, KeyOutput{Name: name, Id: key.ID().Pretty()})
+			list = append(list, KeyOutput{
+				Name: name,
+				Id:   keyEnc.FormatID(key.ID()),
+			})
 		}
 
 		return cmds.EmitOnce(res, &KeyOutputList{list})
@@ -413,29 +437,107 @@ var keyRmCmd = &cmds.Command{
 	Type: KeyOutputList{},
 }
 
-func verifyIDFormatLabel(formatLabel string) error {
-	switch formatLabel {
-	case "b58mh":
+var keyRotateCmd = &cmds.Command{
+	Helptext: cmds.HelpText{
+		Tagline: "Rotates the ipfs identity.",
+		ShortDescription: `
+Generates a new ipfs identity and saves it to the ipfs config file.
+Your existing identity key will be backed up in the Keystore.
+The daemon must not be running when calling this command.
+
+ipfs uses a repository in the local file system. By default, the repo is
+located at ~/.ipfs. To change the repo location, set the $IPFS_PATH
+environment variable:
+
+    export IPFS_PATH=/path/to/ipfsrepo
+`,
+	},
+	Arguments: []cmds.Argument{},
+	Options: []cmds.Option{
+		cmds.StringOption(oldKeyOptionName, "o", "Keystore name to use for backing up your existing identity"),
+		cmds.StringOption(keyStoreTypeOptionName, "t", "type of the key to create: rsa, ed25519").WithDefault(keyStoreAlgorithmDefault),
+		cmds.IntOption(keyStoreSizeOptionName, "s", "size of the key to generate"),
+	},
+	NoRemote: true,
+	PreRun: func(req *cmds.Request, env cmds.Environment) error {
+		cctx := env.(*oldcmds.Context)
+		daemonLocked, err := fsrepo.LockedByOtherProcess(cctx.ConfigRoot)
+		if err != nil {
+			return err
+		}
+
+		log.Info("checking if daemon is running...")
+		if daemonLocked {
+			log.Debug("ipfs daemon is running")
+			e := "ipfs daemon is running. please stop it to run this command"
+			return cmds.ClientError(e)
+		}
+
 		return nil
-	case "b36cid":
-		return nil
-	}
-	return fmt.Errorf("invalid output format option")
+	},
+	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+		cctx := env.(*oldcmds.Context)
+		nBitsForKeypair, nBitsGiven := req.Options[keyStoreSizeOptionName].(int)
+		algorithm, _ := req.Options[keyStoreTypeOptionName].(string)
+		oldKey, ok := req.Options[oldKeyOptionName].(string)
+		if !ok {
+			return fmt.Errorf("keystore name for backing up old key must be provided")
+		}
+		if oldKey == "self" {
+			return fmt.Errorf("keystore name for back up cannot be named 'self'")
+		}
+		return doRotate(os.Stdout, cctx.ConfigRoot, oldKey, algorithm, nBitsForKeypair, nBitsGiven)
+	},
 }
 
-func formatID(id peer.ID, formatLabel string) string {
-	switch formatLabel {
-	case "b58mh":
-		return id.Pretty()
-	case "b36cid":
-		if s, err := peer.ToCid(id).StringOfBase(mbase.Base36); err != nil {
-			panic(err)
-		} else {
-			return s
-		}
-	default:
-		panic("unreachable")
+func doRotate(out io.Writer, repoRoot string, oldKey string, algorithm string, nBitsForKeypair int, nBitsGiven bool) error {
+	// Open repo
+	repo, err := fsrepo.Open(repoRoot)
+	if err != nil {
+		return fmt.Errorf("opening repo (%v)", err)
 	}
+	defer repo.Close()
+
+	// Read config file from repo
+	cfg, err := repo.Config()
+	if err != nil {
+		return fmt.Errorf("reading config from repo (%v)", err)
+	}
+
+	// Generate new identity
+	var identity config.Identity
+	if nBitsGiven {
+		identity, err = config.CreateIdentity(out, []options.KeyGenerateOption{
+			options.Key.Size(nBitsForKeypair),
+			options.Key.Type(algorithm),
+		})
+	} else {
+		identity, err = config.CreateIdentity(out, []options.KeyGenerateOption{
+			options.Key.Type(algorithm),
+		})
+	}
+	if err != nil {
+		return fmt.Errorf("creating identity (%v)", err)
+	}
+
+	// Save old identity to keystore
+	oldPrivKey, err := cfg.Identity.DecodePrivateKey("")
+	if err != nil {
+		return fmt.Errorf("decoding old private key (%v)", err)
+	}
+	keystore := repo.Keystore()
+	if err := keystore.Put(oldKey, oldPrivKey); err != nil {
+		return fmt.Errorf("saving old key in keystore (%v)", err)
+	}
+
+	// Update identity
+	cfg.Identity = identity
+
+	// Write config file to repo
+	if err = repo.SetConfig(cfg); err != nil {
+		return fmt.Errorf("saving new key to config (%v)", err)
+	}
+	return nil
 }
 
 func keyOutputListEncoders() cmds.EncoderFunc {

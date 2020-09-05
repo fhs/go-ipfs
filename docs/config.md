@@ -179,8 +179,8 @@ does (e.g, `"1d2h4m40.01s"`).
 - [`Pubsub`](#pubsub)
     - [`Pubsub.Router`](#pubsubrouter)
     - [`Pubsub.DisableSigning`](#pubsubdisablesigning)
-    - [`Peering`](#peering)
-        - [`Peering.Peers`](#peeringpeers)
+- [`Peering`](#peering)
+    - [`Peering.Peers`](#peeringpeers)
 - [`Reprovider`](#reprovider)
     - [`Reprovider.Interval`](#reproviderinterval)
     - [`Reprovider.Strategy`](#reproviderstrategy)
@@ -260,7 +260,7 @@ Default:
 [
   "/ip4/0.0.0.0/tcp/4001",
   "/ip6/::/tcp/4001",
-  "/ip6/0.0.0.0/udp/4001/quic",
+  "/ip4/0.0.0.0/udp/4001/quic",
   "/ip6/::/udp/4001/quic"
 ]
 ```
@@ -586,6 +586,12 @@ Type: `array[string]`
 
 `PublicGateways` is a dictionary for defining gateway behavior on specified hostnames.
 
+Hostnames can optionally be defined with one or more wildcards.
+
+Examples:
+- `*.example.com` will match requests to `http://foo.example.com/ipfs/*` or `http://{cid}.ipfs.bar.example.com/*`.
+- `foo-*.example.com` will match requests to `http://foo-bar.example.com/ipfs/*` or `http://{cid}.ipfs.foo-xyz.example.com/*`.
+
 #### `Gateway.PublicGateways: Paths`
 
 Array of paths that should be exposed on the hostname.
@@ -840,7 +846,7 @@ Default: `false`
 
 Type: `bool`
 
-### `Peering`
+## `Peering`
 
 Configures the peering subsystem. The peering subsystem configures go-ipfs to
 connect to, remain connected to, and reconnect to a set of nodes. Nodes should
@@ -877,7 +883,7 @@ Peering can be asymmetric or symmetric:
   connection may flap repeatedly. Be careful when asymmetrically peering to not
   overload peers.
 
-#### `Peering.Peers`
+### `Peering.Peers`
 
 The set of peers with which to peer.
 
@@ -1249,7 +1255,7 @@ receiver supports. When establishing an _inbound_ connection, go-ipfs will let
 the initiator choose the protocol, but will refuse to use any of the disabled
 transports.
 
-Supported transports are: TLS (priority 100), SECIO (priority 200), Noise
+Supported transports are: TLS (priority 100), SECIO (Disabled: i.e. priority false), Noise
 (priority 300).
 
 No default priority will ever be less than 100.
@@ -1266,12 +1272,12 @@ Type: `priority`
 
 #### `Swarm.Transports.Security.SECIO`
 
-[SECIO](https://github.com/libp2p/specs/tree/master/secio) is the most widely
+[SECIO](https://github.com/libp2p/specs/tree/master/secio) was the most widely
 supported IPFS & libp2p security transport. However, it is currently being
 phased out in favor of more popular and better vetted protocols like TLS and
 Noise.
 
-Default: `200`
+Default: `false`
 
 Type: `priority`
 

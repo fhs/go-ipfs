@@ -35,15 +35,21 @@ test_rotate() {
         test_expect_success "rotating keys" '
         case $TO_ALG in
         rsa)
-                ipfs rotate -a=rsa -b=2048 --oldkey=oldkey
+                ipfs key rotate -t=rsa -s=2048 --oldkey=oldkey
                 ;;
         ed25519)
-                ipfs rotate -a=ed25519 --oldkey=oldkey
+                ipfs key rotate -t=ed25519 --oldkey=oldkey
                 ;;
         *)
-                ipfs rotate --oldkey=oldkey
+                ipfs key rotate --oldkey=oldkey
                 ;;
         esac
+        '
+
+        test_expect_success "'ipfs key rotate -o self' should fail" '
+        echo "Error: keystore name for back up cannot be named '\''self'\''" >expected-self
+        test_must_fail ipfs key rotate -o self 2>actual-self &&
+        test_cmp expected-self actual-self
         '
 
         test_expect_success "Compare second ID and key to first" '
@@ -56,8 +62,8 @@ test_rotate() {
         test_expect_success "checking ID" '
         ipfs config Identity.PeerID > expected-id &&
         ipfs id -f "<id>\n" > actual-id &&
-        ipfs key list -l | grep self | cut -d " " -f1 > keystore-id &&
-        ipfs key list -l | grep oldkey | cut -d " " -f1 | tr -d "\n" > old-keystore-id &&
+        ipfs key list -l --ipns-base=b58mh | grep self | cut -d " " -f1 > keystore-id &&
+        ipfs key list -l --ipns-base=b58mh | grep oldkey | cut -d " " -f1 | tr -d "\n" > old-keystore-id &&
         test_cmp expected-id actual-id &&
         test_cmp expected-id keystore-id &&
         test_cmp old-keystore-id first_id
