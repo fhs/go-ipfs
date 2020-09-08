@@ -110,8 +110,4 @@ require (
 	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375 // indirect
 )
 
-replace github.com/ipfs/go-ds-badger => ../../ipfs/go-ds-badger
-
-replace github.com/dgraph-io/badger/v2 => ../../dgraph-io/badger
-
 go 1.13
