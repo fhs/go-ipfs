@@ -7,6 +7,7 @@ require (
 	github.com/bren2010/proquint v0.0.0-20160323162903-38337c27106d
 	github.com/cheggaaa/pb v1.0.29
 	github.com/coreos/go-systemd/v22 v22.1.0
+	github.com/dgraph-io/badger v1.6.2 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elgris/jsondiff v0.0.0-20160530203242-765b5c24c302
 	github.com/fatih/color v1.9.0 // indirect
@@ -109,9 +110,5 @@ require (
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1
 	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375 // indirect
 )
-
-replace github.com/ipfs/go-ds-badger => ../../ipfs/go-ds-badger
-
-replace github.com/dgraph-io/badger/v2 => ../../dgraph-io/badger
 
 go 1.13
