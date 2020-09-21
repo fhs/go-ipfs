@@ -10,9 +10,9 @@ GOTFLAGS ?=
 
 # Unexport GOFLAGS so we only apply it where we actually want it.
 unexport GOFLAGS
-# Try to make building as reproducible as possible by stripping the go path.
 # Override so we can combine with the user's go flags.
-override GOFLAGS += -trimpath
+# Try to make building as reproducible as possible by stripping the go path.
+override GOFLAGS += "-asmflags=all='-trimpath=$(GOPATH)'" "-gcflags=all='-trimpath=$(GOPATH)'"
 
 ifeq ($(tarball-is),1)
 	GOFLAGS += -mod=vendor
